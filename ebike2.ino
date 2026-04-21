@@ -6,7 +6,7 @@
 int sensor = 19;
 const uint16_t FLAGS = 0b0000000001000100;//0x0044;
 
-
+//TESTE
 // Adjustable range
 const int MIN_POWER = 50;  // Minimum power in watts
 const int MAX_POWER = 500;  // Maximum power in watts
