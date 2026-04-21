@@ -1,0 +1,39 @@
+enum  FitnessMachineFeatures {
+    AverageSpeedSupported = 1u,
+    CadenceSupported = 2u,
+    TotalDistanceSupported = 4u,
+    InclinationSupported = 8u,
+    ElevationGainSupported = 0x10u,
+    PaceSupported = 0x20u,
+    StepCountSupported = 0x40u,
+    ResistanceLevelSupported = 0x80u,
+    StrideCountSupported = 0x100u,
+    ExpendedEnergySupported = 0x200u,
+    HeartRateMeasurementSupported = 0x400u,
+    MetabolicEquivalentSupported = 0x800u,
+    ElapsedTimeSupported = 0x1000u,
+    RemainingTimeSupported = 0x2000u,
+    PowerMeasurementSupported = 0x4000u,
+    ForceOnBeltSupported = 0x8000u,
+    UserDataRetentionSupported = 0x10000u
+};
+
+enum TargetSettingsFeatures {
+    SpeedTargetSupported = 1u,
+    InclinationTargetSupported = 2u,
+    ResistanceTargetSupported = 4u,
+    PowerTargetSupported = 8u,
+    HeartRateTargetSupported = 0x10u,
+    ExpendedEnergyTargetSupported = 0x20u,
+    StepNumberTargetSupported = 0x40u,
+    StrideNumberTargetSupported = 0x80u,
+    DistanceTargetSupported = 0x100u,
+    TrainingTimeTargetSupported = 0x200u,
+    TimeIn2HeartZonesTargetSupported = 0x400u,
+    TimeIn3HeartZonesTargetSupported = 0x800u,
+    TimeIn5HeartZonesTargetSupported = 0x1000u,
+    IndoorBikeSimulationParametersSupported = 0x2000u,
+    WheelCircunferenceConfigurationSupported = 0x4000u,
+    SpinDownControlSupported = 0x8000u,
+    CadenceTargetSupported = 0x10000u
+};

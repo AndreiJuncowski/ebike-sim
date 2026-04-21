@@ -1,12 +1,19 @@
 #include <Arduino.h>
 #include <NimBLEDevice.h>
 #include "ServerCallbacks.h"
+#include "utils.h"
 #include "IndoorBike.h"
+#include "FitnessMachine.h"
+#include "FitnessMachineControlPoint.h"
 
 static NimBLEServer* pServer;
-static NimBLECharacteristic* pIndoorBikeCaracterisic;
+static NimBLECharacteristic* pIndoorBikeCharacterisic;
+static NimBLECharacteristic* pFitnessMachineControlPointCharacterisic;
+static NimBLECharacteristic* pFitnessMachineFeatureCharacteristic;
+
 static NimBLEService* pFITMachineService;
 ServerCallbacks serverCallbacks;
+FitnessMachineControlPoint fitnessMachineControlPoint;
 
 
 /** Handler class for characteristic actions */
@@ -15,6 +22,7 @@ class CharacteristicCallbacks : public NimBLECharacteristicCallbacks {
         Serial.printf("%s : onRead(), value: %s\n",
                       pCharacteristic->getUUID().toString().c_str(),
                       pCharacteristic->getValue().c_str());
+                      pCharacteristic->notify();
     }
 
     void onWrite(NimBLECharacteristic* pCharacteristic, NimBLEConnInfo& connInfo) override {
@@ -60,8 +68,8 @@ void sendIndoorBikeData() {
   indoorBikeData.setTempoPorVoltaMicros(tempoVoltaMicrosegundos);
   uint8_t buf[20];
   uint8_t len = indoorBikeData.build(buf);
-  pIndoorBikeCaracterisic->setValue(buf, len);
-  pIndoorBikeCaracterisic->notify();
+  pIndoorBikeCharacterisic->setValue(buf, len);
+  pIndoorBikeCharacterisic->notify();
   indoorBikeData.print();
 }
 
@@ -70,8 +78,18 @@ void send() {
   unsigned long int now = millis();
   if(now - lastSent >= 1000) {
     lastSent = now;
-    sendIndoorBikeData();    
+    sendIndoorBikeData();
   }
+}
+
+unsigned long lastPrint = 0;
+void printData() {
+  unsigned long int now = millis();
+  if(now - lastPrint <= 5000) {
+    return;
+  }
+  lastPrint = now;
+  fitnessMachineControlPoint.print();
 }
 
 unsigned long lastCheck = 0;
@@ -91,6 +109,31 @@ void checkClients() {
   }
 }
 
+void setFitnessMachineFeatures() {
+    uint32_t SupportedFeatures = 
+        FitnessMachineFeatures::CadenceSupported |
+        FitnessMachineFeatures::AverageSpeedSupported |
+        FitnessMachineFeatures::PowerMeasurementSupported |
+        FitnessMachineFeatures::HeartRateMeasurementSupported;
+
+
+    uint32_t SupportedTargetSettingFeatures = 
+        TargetSettingsFeatures::InclinationTargetSupported;
+        
+    uint8_t fitnessMachineFlags[8];
+
+    fitnessMachineFlags[0] = (SupportedFeatures >> 0) & 0xFF;
+    fitnessMachineFlags[1] = (SupportedFeatures >> 8) & 0xFF;
+    fitnessMachineFlags[2] = (SupportedFeatures >> 16) & 0xFF;
+    fitnessMachineFlags[3] = (SupportedFeatures >> 24) & 0xFF;
+    fitnessMachineFlags[4] = (SupportedTargetSettingFeatures >> 0) & 0xFF;
+    fitnessMachineFlags[5] = (SupportedTargetSettingFeatures >> 8) & 0xFF;
+    fitnessMachineFlags[6] = (SupportedTargetSettingFeatures >> 16) & 0xFF;
+    fitnessMachineFlags[7] = (SupportedTargetSettingFeatures >> 24) & 0xFF;
+
+    pFitnessMachineFeatureCharacteristic->setValue(fitnessMachineFlags, 8);
+}
+
 void setup(void) {
     Serial.begin(115200);
     Serial.printf("Starting NimBLE Server\n");
@@ -101,11 +144,17 @@ void setup(void) {
     pServer->setCallbacks(&serverCallbacks); 
 
     pFITMachineService = pServer->createService("1826");
-    pIndoorBikeCaracterisic = pFITMachineService->createCharacteristic("2AD2", NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::WRITE);
+    pIndoorBikeCharacterisic = pFITMachineService->createCharacteristic("2AD2", NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::WRITE);
+    pFitnessMachineControlPointCharacterisic = pFITMachineService->createCharacteristic("2AD9", NIMBLE_PROPERTY::WRITE);
+    pFitnessMachineFeatureCharacteristic = pFITMachineService->createCharacteristic("2ACC", NIMBLE_PROPERTY::READ);
 
     // pIndoorBikeCaracterisic->setValue("Burger");
-    pIndoorBikeCaracterisic->setCallbacks(&chrCallbacks);
+    pIndoorBikeCharacterisic->setCallbacks(&chrCallbacks);
+    pFitnessMachineControlPointCharacterisic->setCallbacks(&fitnessMachineControlPoint);
+    pFitnessMachineFeatureCharacteristic->setCallbacks(&chrCallbacks);
 
+    setFitnessMachineFeatures();
+    
 
     /** Create an advertising instance and add the services to the advertised data */
     NimBLEAdvertising* pAdvertising = NimBLEDevice::getAdvertising();
@@ -124,4 +173,5 @@ void setup(void) {
 void loop() {
     send();
     checkClients();
+    printData();
 }
