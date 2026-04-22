@@ -18,7 +18,7 @@ class IndoorBike {
     IndoorBike();
     uint8_t build(uint8_t* buf);
     void setSpeed(uint16_t speed);
-    void setTempoPorVoltaMicros(unsigned long microsegundos);
+    void setCadence(float cadence);
     void print();
     
    private:

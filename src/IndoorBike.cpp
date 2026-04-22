@@ -23,8 +23,8 @@ void IndoorBike::setSpeed(uint16_t speed) {
   instantaneousPower = pow(speed,3)*0.15;
 }
 
-void IndoorBike::setTempoPorVoltaMicros(unsigned long microsegundos) {
-  instantaneousCadence = 60000000 / microsegundos;
+void IndoorBike::setCadence(float cadence) {
+  instantaneousCadence = cadence;
 }
 
 void IndoorBike::print() {
